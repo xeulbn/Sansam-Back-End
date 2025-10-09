@@ -75,7 +75,7 @@
 
 [👨🏻‍💻 6. 재고 서버 분리 with RabbitMQ](https://github.com/SanSam2/Back-End/wiki/Stock-%EC%84%9C%EB%B2%84-%EB%B6%84%EB%A6%AC-%EC%97%AC%EC%A0%95%EA%B8%B0-%28SanSam-%EC%A3%BC%EB%AC%B8---%EA%B2%B0%EC%A0%9C---%EC%83%81%ED%83%9C-MSA-%EC%97%AC%EC%A0%95%EA%B8%B0%29--%281%29)
 
-[👨🏻‍💻 7. 재고 서버 분리 with Kafka & KafkaStreams] (https://github.com/SanSam2/Back-End/wiki/Kafka%EB%A1%9C-%EB%A9%94%EC%8B%9C%EC%A7%80-%ED%81%90-%EB%B3%80%EA%B2%BD-%EA%B7%B8%EB%A6%AC%EA%B3%A0-KafkaStreams%EC%9D%98-%EB%8F%84%EC%9E%85)
+[👨🏻‍💻 7. 재고 서버 분리 with Kafka & KafkaStreams](https://github.com/SanSam2/Back-End/wiki/Kafka%EB%A1%9C-%EB%A9%94%EC%8B%9C%EC%A7%80-%ED%81%90-%EB%B3%80%EA%B2%BD-%EA%B7%B8%EB%A6%AC%EA%B3%A0-KafkaStreams%EC%9D%98-%EB%8F%84%EC%9E%85)
 
 
 ---
