@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  sansam:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        JAR_FILE: build/libs/SanSam-0.0.1-SNAPSHOT.jar
+    image: sansam:local
+    container_name: sansam
+
+    # 비밀/환경변수는 여기서 끌어옴
+    env_file:
+      - ./.env.sansam.local
+
+    # 스프링 프로파일
+    environment:
+      SPRING_PROFILES_ACTIVE: local,perf
+      OTEL_SERVICE_NAME: SanSam
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://host.docker.internal:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      # Jaeger가 다른 네트워크에 있다면 아래 OTEL_* 만 이곳에서 덮어써도 됨
+      OTEL_TRACES_SAMPLER: always_on
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
+
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: 1234
+      SPRING_DATA_REDIS_TIMEOUT: 500ms
+      SPRING_DATA_REDIS_LETTUCE_POOL_MAX_ACTIVE: 32
+      SPRING_DATA_REDIS_LETTUCE_POOL_MAX_IDLE: 16
+      SPRING_DATA_REDIS_LETTUCE_POOL_MIN_IDLE: 1
+
+    ports:
+      - "18080:8080"   # 호스트:컨테이너 (충돌 피하려고 18080 사용)
+    restart: unless-stopped
+
+    networks:
+      - sansam-net 
+      
+networks:
+  sansam-net:
+    external: true  

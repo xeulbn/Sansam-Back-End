@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class PayGlobalExceptionHandler {
 
-    public static record ApiError(String code, String message){
+    public record ApiError(String code, String message){
         public static ApiError of(String code, String message){
             return new ApiError(code, message);
         }
@@ -29,7 +29,7 @@ public class PayGlobalExceptionHandler {
                     -> HttpStatus.BAD_REQUEST;
 
             // 404
-            case ORDER_NOT_FOUND, PRODUCT_NOT_FOUND, CANCEL_NOT_FOUND, NO_USER_ERROR, CANNOT_FIND_FILE_IMAGE, PAYMENTS_NOT_FOUND
+            case ORDER_NOT_FOUND, PRODUCT_NOT_FOUND, STOCK_NOT_ENOUGH, CANCEL_NOT_FOUND, NO_USER_ERROR, CANNOT_FIND_FILE_IMAGE, PAYMENTS_NOT_FOUND
                     -> HttpStatus.NOT_FOUND;
 
             // 409
@@ -50,7 +50,7 @@ public class PayGlobalExceptionHandler {
                     -> HttpStatus.UNPROCESSABLE_ENTITY;
 
             // 500
-            case INTERNAL_SERVER_ERROR,PAYMENTS_TYPE_NOT_CONFIGURED,API_SERVER_ERROR -> HttpStatus.INTERNAL_SERVER_ERROR;
+            case INTERNAL_SERVER_ERROR,STOCK_OPTIMISTIC_LOCK_FAILED,PAYMENTS_TYPE_NOT_CONFIGURED,API_SERVER_ERROR -> HttpStatus.INTERNAL_SERVER_ERROR;
         };
     }
 }

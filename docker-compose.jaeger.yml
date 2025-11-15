@@ -1,0 +1,14 @@
+version: "3.8"
+
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger-local
+    restart: unless-stopped
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true      # OTLP 수집 활성화(안전빵)
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411 # (옵션) Zipkin 포맷도 받게 함
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "4317:4317"    # OTLP gRPC (앱이 여길 향해 보냄)
+      - "4318:4318"    # OTLP HTTP (필수 아님)

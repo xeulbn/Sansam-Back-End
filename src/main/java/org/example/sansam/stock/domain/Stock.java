@@ -17,6 +17,11 @@ public class Stock {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+    @Column(name = "version")
+    private Long version;
+
+
     @Column(name = "stock_quantity", nullable = false)
     private int stockQuantity;
 
@@ -26,6 +31,16 @@ public class Stock {
 
     protected Stock() {
         //JPA only
+    }
+
+    public void decrease(int qty) {
+        if (qty <= 0) {
+            throw new IllegalArgumentException("qty must be positive");
+        }
+        if (this.stockQuantity < qty) {
+            throw new CustomException(ErrorCode.STOCK_NOT_ENOUGH);
+        }
+        this.stockQuantity -= qty;
     }
 
 
