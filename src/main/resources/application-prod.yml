@@ -44,6 +44,14 @@ spring:
     job:
       enabled: false              # 앱 시작할 때 배치 잡 자동 실행하지 않음 (테스트/스케줄러로만 실행)
 
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:redis}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      username: default
+      password: ${SPRING_DATA_REDIS_PASSWORD:1234}
+      database: 0
+
   mail:
     host: smtp.gmail.com
     port: 587

@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class PayGlobalExceptionHandler {
 
-    public static record ApiError(String code, String message){
+    public record ApiError(String code, String message){
         public static ApiError of(String code, String message){
             return new ApiError(code, message);
         }
@@ -25,7 +25,7 @@ public class PayGlobalExceptionHandler {
     private HttpStatus toStatus(ErrorCode code) {
         return switch (code) {
             // 400
-            case INVALID_REQUEST, RESPONSE_FORM_NOT_RIGHT, CHECK_STATUS, NO_ITEM_IN_ORDER, ORDER_NOT_CANCELABLE,ORDER_PRODUCT_NOT_BELONGS_TO_ORDER
+            case INVALID_REQUEST, RESPONSE_FORM_NOT_RIGHT, INVALID_STOCK_QUANTITY,CHECK_STATUS, NO_ITEM_IN_ORDER, ORDER_NOT_CANCELABLE,ORDER_PRODUCT_NOT_BELONGS_TO_ORDER
                     -> HttpStatus.BAD_REQUEST;
 
             // 404
@@ -33,7 +33,7 @@ public class PayGlobalExceptionHandler {
                     -> HttpStatus.NOT_FOUND;
 
             // 409
-            case NOT_ENOUGH_STOCK, NO_ITEM, ZERO_STOCK, NOT_EQUAL_COST, PRICE_TAMPERING, ORDER_ALREADY_FINISHED
+            case NOT_ENOUGH_STOCK, NO_ITEM, STOCK_LOCK_FAIL, ZERO_STOCK, NOT_EQUAL_COST, PRICE_TAMPERING, ORDER_ALREADY_FINISHED
                     -> HttpStatus.CONFLICT;
 
             // 결제/수단
