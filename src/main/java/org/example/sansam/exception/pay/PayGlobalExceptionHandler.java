@@ -25,7 +25,8 @@ public class PayGlobalExceptionHandler {
     private HttpStatus toStatus(ErrorCode code) {
         return switch (code) {
             // 400
-            case INVALID_REQUEST, RESPONSE_FORM_NOT_RIGHT, INVALID_STOCK_QUANTITY,CHECK_STATUS, NO_ITEM_IN_ORDER, ORDER_NOT_CANCELABLE,ORDER_PRODUCT_NOT_BELONGS_TO_ORDER
+            case INVALID_REQUEST, RESPONSE_FORM_NOT_RIGHT, INVALID_STOCK_QUANTITY,CHECK_STATUS, NO_ITEM_IN_ORDER, ORDER_NOT_CANCELABLE,ORDER_PRODUCT_NOT_BELONGS_TO_ORDER,
+                 DUPLICATE_PURCHASE_ID
                     -> HttpStatus.BAD_REQUEST;
 
             // 404

@@ -23,9 +23,27 @@ public class Stock {
     @Column(name = "product_details_id", nullable = false)
     private Long productDetailsId;
 
+    @Column(name = "used_stock", nullable = false)
+    private int usedStock;
+
 
     protected Stock() {
         //JPA only
+    }
+
+    public void syncUsedStock(int newUsed) {
+        if (newUsed < 0 || newUsed > stockQuantity) {
+            throw new CustomException(ErrorCode.INVALID_STOCK_QUANTITY);
+        }
+        this.usedStock = newUsed;
+    }
+
+    public void increaseUsed(int delta) {
+        int next = this.usedStock + delta;
+        if (next < 0 || next > stockQuantity) {
+            throw new CustomException(ErrorCode.INVALID_STOCK_QUANTITY);
+        }
+        this.usedStock = next;
     }
 
     public boolean decrease(int qty) {

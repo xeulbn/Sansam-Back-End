@@ -32,6 +32,7 @@ public enum ErrorCode {
     ORDER_PRODUCT_NOT_BELONGS_TO_ORDER("주문과 주문상품이 매칭되지 않습니다."),
     STOCK_LOCK_FAIL("Redis 재고락 실패"),
     INVALID_STOCK_QUANTITY("잘못된 Stock 개수 입니다."),
+    DUPLICATE_PURCHASE_ID("중복된 구매 ID 입니다."),
     PAYMENTS_NOT_FOUND("결제 정보를 찾을 수 없습니다.");
 
     private final String message;

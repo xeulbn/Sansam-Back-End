@@ -2,6 +2,10 @@ server:
   port: 8080
   address: 0.0.0.0
 
+  tomcat:
+    threads:
+      max: 500
+
   servlet:
     session:
       timeout: 120m
@@ -30,6 +34,13 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 10
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      keepalive-time: 300000
   jpa:
     hibernate:
       ddl-auto: update
