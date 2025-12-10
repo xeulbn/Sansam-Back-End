@@ -2,6 +2,10 @@ server:
   port: 8080
   address: 0.0.0.0
 
+  tomcat:
+    threads:
+      max: 500
+
   servlet:
     session:
       timeout: 120m
@@ -30,6 +34,13 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 10
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      keepalive-time: 300000
   jpa:
     hibernate:
       ddl-auto: update
@@ -43,6 +54,14 @@ spring:
       initialize-schema: never   # 앱 실행 시 메타 테이블 자동 생성
     job:
       enabled: false              # 앱 시작할 때 배치 잡 자동 실행하지 않음 (테스트/스케줄러로만 실행)
+
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:redis}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      username: default
+      password: ${SPRING_DATA_REDIS_PASSWORD:1234}
+      database: 0
 
   mail:
     host: smtp.gmail.com

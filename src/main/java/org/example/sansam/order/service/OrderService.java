@@ -6,25 +6,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.exception.pay.CustomException;
 import org.example.sansam.exception.pay.ErrorCode;
 import org.example.sansam.order.domain.Order;
-import org.example.sansam.order.domain.OrderProduct;
-import org.example.sansam.order.domain.nameformatter.KoreanOrdernameFormatter;
-import org.example.sansam.order.domain.ordernumber.OrderNumberPolicy;
-import org.example.sansam.order.domain.pricing.PricingPolicy;
-import org.example.sansam.order.dto.*;
-import org.example.sansam.order.mapper.OrderResponseMapper;
+import org.example.sansam.order.dto.OrderItemDto;
+import org.example.sansam.order.dto.OrderRequest;
+import org.example.sansam.order.dto.OrderResponse;
+import org.example.sansam.order.dto.OrderWithProductsResponse;
 import org.example.sansam.order.mapper.OrderSummaryMapper;
 import org.example.sansam.order.repository.OrderRepository;
 import org.example.sansam.product.domain.Product;
-import org.example.sansam.product.repository.ProductJpaRepository;
 import org.example.sansam.product.service.ProductService;
 import org.example.sansam.s3.service.FileService;
-import org.example.sansam.status.domain.Status;
-import org.example.sansam.status.domain.StatusEnum;
-import org.example.sansam.status.repository.StatusRepository;
-import org.example.sansam.stock.Service.StockService;
-import org.example.sansam.user.domain.User;
-import org.example.sansam.user.repository.UserRepository;
-
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,15 +37,12 @@ public class OrderService {
     private final FileService fileService;
 
 
-    private final StockService stockService;
     private final AfterConfirmOrderService afterConfirmOrderService;
     private final ReadOnlyOrderService readOnlyOrderService;
 
-    private final OrderNumberPolicy orderNumberPolicy;
-    private final PricingPolicy pricingPolicy;
     private final OrderSummaryMapper mapper;
 
-    private int cnt=0;
+    private final int cnt=0;
 
 
     public OrderResponse saveOrder(OrderRequest request){

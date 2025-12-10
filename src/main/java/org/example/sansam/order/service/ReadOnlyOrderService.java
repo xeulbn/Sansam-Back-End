@@ -9,11 +9,10 @@ import org.example.sansam.product.domain.Product;
 import org.example.sansam.product.repository.ProductJpaRepository;
 import org.example.sansam.status.domain.Status;
 import org.example.sansam.status.domain.StatusEnum;
-import org.example.sansam.status.repository.StatusRepository;
+import org.example.sansam.status.service.StatusCachingService;
 import org.example.sansam.user.domain.User;
 import org.example.sansam.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -28,7 +27,7 @@ public class ReadOnlyOrderService {
 
     private final UserRepository userRepository;
     private final ProductJpaRepository productJpaRepository;
-    private final StatusRepository statusRepository;
+    private final StatusCachingService statusCachingService;
 
 
     @Transactional(readOnly = true)
@@ -49,8 +48,8 @@ public class ReadOnlyOrderService {
             }
         }
 
-        Status waiting = statusRepository.findByStatusName(StatusEnum.ORDER_WAITING);
-        Status opWaiting = statusRepository.findByStatusName(StatusEnum.ORDER_PRODUCT_WAITING);
+        Status waiting = statusCachingService.get(StatusEnum.ORDER_WAITING);
+        Status opWaiting = statusCachingService.get(StatusEnum.ORDER_PRODUCT_WAITING);
 
         return new Preloaded(user, productMap, waiting, opWaiting);
     }
