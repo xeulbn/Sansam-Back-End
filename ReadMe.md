@@ -67,16 +67,16 @@
 ******************
 
 ## 😆 주문 / 결제 / 상태 / 재고 발전 과정 (1차 MVP 이후부터 마무리까지) ##
-- [[👨🏻‍💻 1. 재고 ERD 분리 과정|재고-ERD-분리-과정]]
-- [[👨🏻‍💻 2. Next-Key Lock을 통한 재고 관리|Next-Key-Lock을-통한-재고-관리]]
-- [[👨🏻‍💻 3. 테스트 코드 작성과 보상 Outbox패턴 구현기 |테스트-코드-작성과-보상-Outbox패턴-구현기]]
-- [[👨🏻‍💻 4. Order 트랜잭션 분리 & DB Indexing을 통한 최적화 & 테스트 툴 변경|Order-트랜잭션-분리-&-DB-Indexing을-통한-최적화-&-테스트-툴-변경]]
-- [[👨🏻‍💻 5. HikariCP 튜닝|HikariCP-튜닝]]
-- [[👨🏻‍💻 6. 상태값 캐싱 |상태값-캐싱]]
-- [[👨🏻‍💻 7. 재고 비동기 처리 (단일 서버 내) |재고-비동기-처리-(단일-서버-내)]]
-- [[👨🏻‍💻 8. 단일 서버의 한계를 해결하기 위해 재고 서버 분리 |단일-서버의-한계를-해결하기-위해-재고-서버-분리]]
-- [[👨🏻‍💻 9. RabbitMQ와 Kafka 비교, 그리고 Kafka를 고려한 이유 |RabbitMQ와-Kafka-비교,-그리고-Kafka를-고려한-이유]]
-- [[👨🏻‍💻 10. 재고 처리 아키텍처 개선 여정 (마지막 여정) |재고-처리-아키텍처-개선-여정]]
+- [👨🏻‍💻 1. 재고 ERD 분리 과정](https://github.com/SanSam2/Back-End/wiki/%EC%9E%AC%EA%B3%A0-ERD-%EB%B6%84%EB%A6%AC-%EA%B3%BC%EC%A0%95)
+- [👨🏻‍💻 2. Next-Key Lock을 통한 재고 관리](https://github.com/SanSam2/Back-End/wiki/Next-Key-Lock%EC%9D%84-%ED%86%B5%ED%95%9C-%EC%9E%AC%EA%B3%A0-%EA%B4%80%EB%A6%AC)
+- [👨🏻‍💻 3. 테스트 코드 작성과 보상 Outbox패턴 구현기](https://github.com/SanSam2/Back-End/wiki/%ED%85%8C%EC%8A%A4%ED%8A%B8-%EC%BD%94%EB%93%9C-%EC%9E%91%EC%84%B1%EA%B3%BC-%EB%B3%B4%EC%83%81-Outbox%ED%8C%A8%ED%84%B4-%EA%B5%AC%ED%98%84%EA%B8%B0)
+- [👨🏻‍💻 4. Order 트랜잭션 분리 & DB Indexing을 통한 최적화 & 테스트 툴 변경](https://github.com/SanSam2/Back-End/wiki/Order-%ED%8A%B8%EB%9E%9C%EC%9E%AD%EC%85%98-%EB%B6%84%EB%A6%AC-%26-DB-Indexing%EC%9D%84-%ED%86%B5%ED%95%9C-%EC%B5%9C%EC%A0%81%ED%99%94-%26-%ED%85%8C%EC%8A%A4%ED%8A%B8-%ED%88%B4-%EB%B3%80%EA%B2%BD)
+- [👨🏻‍💻 5. HikariCP 튜닝](https://github.com/SanSam2/Back-End/wiki/HikariCP-%ED%8A%9C%EB%8B%9D)
+- [👨🏻‍💻 6. 상태값 캐싱](https://github.com/SanSam2/Back-End/wiki/%EC%83%81%ED%83%9C%EA%B0%92-%EC%BA%90%EC%8B%B1)
+- [👨🏻‍💻 7. 재고 비동기 처리 (단일 서버 내)](https://github.com/SanSam2/Back-End/wiki/%EC%9E%AC%EA%B3%A0-%EB%B9%84%EB%8F%99%EA%B8%B0-%EC%B2%98%EB%A6%AC-%28%EB%8B%A8%EC%9D%BC-%EC%84%9C%EB%B2%84-%EB%82%B4%29)
+- [👨🏻‍💻 8. 단일 서버의 한계를 해결하기 위해 재고 서버 분리](https://github.com/SanSam2/Back-End/wiki/%EB%8B%A8%EC%9D%BC-%EC%84%9C%EB%B2%84%EC%9D%98-%ED%95%9C%EA%B3%84%EB%A5%BC-%ED%95%B4%EA%B2%B0%ED%95%98%EA%B8%B0-%EC%9C%84%ED%95%B4-%EC%9E%AC%EA%B3%A0-%EC%84%9C%EB%B2%84-%EB%B6%84%EB%A6%AC)
+- [👨🏻‍💻 9. RabbitMQ와 Kafka 비교, 그리고 Kafka를 고려한 이유](https://github.com/SanSam2/Back-End/wiki/RabbitMQ%EC%99%80-Kafka-%EB%B9%84%EA%B5%90%2C-%EA%B7%B8%EB%A6%AC%EA%B3%A0-Kafka%EB%A5%BC-%EA%B3%A0%EB%A0%A4%ED%95%9C-%EC%9D%B4%EC%9C%A0)
+- [👨🏻‍💻 10. 재고 처리 아키텍처 개선 여정 (마지막 여정)](https://github.com/SanSam2/Back-End/wiki/%EC%9E%AC%EA%B3%A0-%EC%B2%98%EB%A6%AC-%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98-%EA%B0%9C%EC%84%A0-%EC%97%AC%EC%A0%95)
 
 
 
