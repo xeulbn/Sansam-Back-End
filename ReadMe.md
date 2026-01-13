@@ -44,22 +44,11 @@
 ---
 ## 슬빈
 
-## 아키텍처 구성도 (Kafka Streams 도입 이후)
-<img width="3258" height="3840" alt="kafkaStreams도입이후_아키텍처" src="https://github.com/user-attachments/assets/b482e91a-b83f-4ef1-a3a5-cf322177a367" />
-
 ### ✅ 주문 및 결제 (Order / Payment)
-- 주문서 저장 / 삭제
-- 토스 API 연동 결제/결제 취소
-- 보상 로직
 
 ### ✅ 재고 (Stock)
-- 재고 차감
-- 재고 증가
-- 보상 로직
 
 ### ✅ 상태 (Status)
-- DB에서 이미 저장되어있는 상태 찾기
-- 상태값 캐싱
 
 ### 프로젝트 여정기
 
