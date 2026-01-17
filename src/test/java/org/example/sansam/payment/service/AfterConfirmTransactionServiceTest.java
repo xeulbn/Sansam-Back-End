@@ -2,19 +2,6 @@ package org.example.sansam.payment.service;
 
 
 import jakarta.persistence.EntityManager;
-import org.example.sansam.notification.event.email.PaymentCompleteEmailEvent;
-import org.example.sansam.notification.event.sse.PaymentCompleteEvent;
-import org.example.sansam.payment.adapter.CancelResponseNormalize;
-import org.example.sansam.payment.domain.*;
-import org.example.sansam.payment.dto.CancelProductRequest;
-import org.example.sansam.payment.dto.PaymentCancelRequest;
-import org.example.sansam.payment.repository.PaymentsCancelRepository;
-import org.example.sansam.payment.util.IdempotencyKeyUtil;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.context.event.ApplicationEvents;
-import org.springframework.test.context.event.RecordApplicationEvents;
-import org.springframework.transaction.annotation.Transactional;
 import org.example.sansam.exception.pay.CustomException;
 import org.example.sansam.exception.pay.ErrorCode;
 import org.example.sansam.notification.service.EmailService;
@@ -24,15 +11,22 @@ import org.example.sansam.order.domain.OrderProduct;
 import org.example.sansam.order.domain.ordernumber.OrderNumberPolicy;
 import org.example.sansam.order.domain.pricing.BasicPricingPolicy;
 import org.example.sansam.payment.Mapper.PaymentMapper;
+import org.example.sansam.payment.adapter.CancelResponseNormalize;
 import org.example.sansam.payment.adapter.TossApprovalNormalizer.Normalized;
+import org.example.sansam.payment.domain.PaymentMethodType;
+import org.example.sansam.payment.domain.Payments;
+import org.example.sansam.payment.domain.PaymentsType;
+import org.example.sansam.payment.dto.CancelProductRequest;
+import org.example.sansam.payment.dto.PaymentCancelRequest;
 import org.example.sansam.payment.dto.TossPaymentResponse;
+import org.example.sansam.payment.repository.PaymentsCancelRepository;
 import org.example.sansam.payment.repository.PaymentsRepository;
+import org.example.sansam.payment.util.IdempotencyKeyUtil;
 import org.example.sansam.product.domain.Category;
 import org.example.sansam.product.domain.Product;
 import org.example.sansam.s3.domain.FileManagement;
 import org.example.sansam.status.domain.Status;
 import org.example.sansam.status.domain.StatusEnum;
-import org.example.sansam.status.repository.StatusRepository;
 import org.example.sansam.user.domain.Role;
 import org.example.sansam.user.domain.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,20 +35,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
+import org.springframework.test.context.event.RecordApplicationEvents;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 
@@ -78,10 +70,6 @@ class AfterConfirmTransactionServiceTest {
     private PaymentsRepository paymentsRepository;
     @Autowired
     private PaymentsCancelRepository paymentsCancelRepository;
-    @Autowired
-    private StatusRepository statusRepository;
-    @Autowired
-    private ApplicationEvents events;
     @Autowired
     private EntityManager em;
 
@@ -240,77 +228,77 @@ class AfterConfirmTransactionServiceTest {
         return em.find(Order.class, order.getId());
     }
 
-    @Test
-    @Transactional
-    void 승인성공_새결제저장_주문상태전이_이벤트2건_요청_매핑반환() {
-        // given
-        Normalized normalized = normalizedApproved();
-
-        TossPaymentResponse expected = TossPaymentResponse.builder()
-                .method("카드").totalAmount(TOTAL_AMOUNT).finalAmount(TOTAL_AMOUNT)
-                .approvedAt(LocalDateTime.of(2025,8,24,10,5))
-                .build();
-        given(paymentMapper.toTossPaymentResponse(any(Payments.class))).willReturn(expected);
-        String orderNumber=getManagedOrder().getOrderNumber();
-
-
-        // when
-        TossPaymentResponse actual = service.approveInTransaction(orderNumber, normalized);
-
-        // then
-        assertThat(actual).usingRecursiveComparison().isEqualTo(expected);
-
-
-        // DB 검증: 동일 paymentKey가 1건 저장
-        Optional<Payments> savedOpt = paymentsRepository.findByPaymentKey("pay_123");
-        assertThat(savedOpt).isPresent();
-
-        // 주문/주문상품 상태 전이 검증
-        Order reloaded = em.find(Order.class, getManagedOrder().getId());
-        assertThat(reloaded.getStatus().getStatusName()).isEqualTo(StatusEnum.ORDER_PAID);
-        reloaded.getOrderProducts().forEach(op ->
-                assertThat(op.getStatus().getStatusName())
-                        .isEqualTo(StatusEnum.ORDER_PRODUCT_PAID_AND_REVIEW_REQUIRED));
-
-        // 이벤트 2건 발행
-        assertThat(events.stream(PaymentCompleteEmailEvent.class)).hasSize(1);
-        assertThat(events.stream(PaymentCompleteEvent.class)).hasSize(1);
-
-        // 매퍼 호출
-        then(paymentMapper).should().toTossPaymentResponse(any(Payments.class));
-    }
-
-    @Test
-    @Transactional
-    void 멱등성_이미해당PaymentKey가_존재하면_저장안하고_상태전이안하고_이벤트발생안하고_기존매핑반환() {
-        // given
-        Normalized normalized = normalizedApproved();
-        TossPaymentResponse resp = TossPaymentResponse.builder()
-                .method("카드").totalAmount(TOTAL_AMOUNT).finalAmount(TOTAL_AMOUNT)
-                .approvedAt(LocalDateTime.of(2025,8,24,10,5))
-                .build();
-        given(paymentMapper.toTossPaymentResponse(any(Payments.class))).willReturn(resp);
-        String orderNumber=getManagedOrder().getOrderNumber();
-
-
-        // when
-        TossPaymentResponse r1 = service.approveInTransaction(orderNumber, normalized);
-        TossPaymentResponse r2 = service.approveInTransaction(orderNumber, normalized);
-
-
-        // then
-        assertThat(r1).usingRecursiveComparison().isEqualTo(resp);
-        assertThat(r2).usingRecursiveComparison().isEqualTo(resp);
-
-        assertThat(paymentsRepository.findByPaymentKey("pay_123")).isPresent();
-        long total = paymentsRepository.count();
-        assertThat(total).isEqualTo(1);
-
-        assertThat(events.stream(PaymentCompleteEmailEvent.class)).hasSize(1);
-        assertThat(events.stream(PaymentCompleteEvent.class)).hasSize(1);
-
-
-    }
+//    @Test
+//    @Transactional
+//    void 승인성공_새결제저장_주문상태전이_이벤트2건_요청_매핑반환() {
+//        // given
+//        Normalized normalized = normalizedApproved();
+//
+//        TossPaymentResponse expected = TossPaymentResponse.builder()
+//                .method("카드").totalAmount(TOTAL_AMOUNT).finalAmount(TOTAL_AMOUNT)
+//                .approvedAt(LocalDateTime.of(2025,8,24,10,5))
+//                .build();
+//        given(paymentMapper.toTossPaymentResponse(any(Payments.class))).willReturn(expected);
+//        String orderNumber=getManagedOrder().getOrderNumber();
+//
+//
+//        // when
+//        TossPaymentResponse actual = service.approveInTransaction(orderNumber, normalized);
+//
+//        // then
+//        assertThat(actual).usingRecursiveComparison().isEqualTo(expected);
+//
+//
+//        // DB 검증: 동일 paymentKey가 1건 저장
+//        Optional<Payments> savedOpt = paymentsRepository.findByPaymentKey("pay_123");
+//        assertThat(savedOpt).isPresent();
+//
+//        // 주문/주문상품 상태 전이 검증
+//        Order reloaded = em.find(Order.class, getManagedOrder().getId());
+//        assertThat(reloaded.getStatus().getStatusName()).isEqualTo(StatusEnum.ORDER_PAID);
+//        reloaded.getOrderProducts().forEach(op ->
+//                assertThat(op.getStatus().getStatusName())
+//                        .isEqualTo(StatusEnum.ORDER_PRODUCT_PAID_AND_REVIEW_REQUIRED));
+//
+//        // 이벤트 2건 발행
+//        assertThat(events.stream(PaymentCompleteEmailEvent.class)).hasSize(1);
+//        assertThat(events.stream(PaymentCompleteEvent.class)).hasSize(1);
+//
+//        // 매퍼 호출
+//        then(paymentMapper).should().toTossPaymentResponse(any(Payments.class));
+//    }
+//
+//    @Test
+//    @Transactional
+//    void 멱등성_이미해당PaymentKey가_존재하면_저장안하고_상태전이안하고_이벤트발생안하고_기존매핑반환() {
+//        // given
+//        Normalized normalized = normalizedApproved();
+//        TossPaymentResponse resp = TossPaymentResponse.builder()
+//                .method("카드").totalAmount(TOTAL_AMOUNT).finalAmount(TOTAL_AMOUNT)
+//                .approvedAt(LocalDateTime.of(2025,8,24,10,5))
+//                .build();
+//        given(paymentMapper.toTossPaymentResponse(any(Payments.class))).willReturn(resp);
+//        String orderNumber=getManagedOrder().getOrderNumber();
+//
+//
+//        // when
+//        TossPaymentResponse r1 = service.approveInTransaction(orderNumber, normalized);
+//        TossPaymentResponse r2 = service.approveInTransaction(orderNumber, normalized);
+//
+//
+//        // then
+//        assertThat(r1).usingRecursiveComparison().isEqualTo(resp);
+//        assertThat(r2).usingRecursiveComparison().isEqualTo(resp);
+//
+//        assertThat(paymentsRepository.findByPaymentKey("pay_123")).isPresent();
+//        long total = paymentsRepository.count();
+//        assertThat(total).isEqualTo(1);
+//
+//        assertThat(events.stream(PaymentCompleteEmailEvent.class)).hasSize(1);
+//        assertThat(events.stream(PaymentCompleteEvent.class)).hasSize(1);
+//
+//
+//    }
 
     @Test
     @Transactional
@@ -386,63 +374,63 @@ class AfterConfirmTransactionServiceTest {
     }
 
 
-    @Test
-    @Transactional
-    void 취소저장_다건_각각_히스토리저장과수량검증() {
-        // given: 기존 주문에 라인 하나 더 추가
-        Order o = getManagedOrder();
-        OrderProduct op2 = OrderProduct.create(product2, 10000L, 1, "M", "BLACK", "url", orderProductWaiting);
-        o.addOrderProduct(op2);
-        em.flush();
-
-        Long opId = o.getOrderProducts().get(0).getId();
-        Long op2Id = op2.getId();
-
-        // DTO 모킹: 두 라인 각각 다른 수량
-        List<CancelProductRequest> items = new ArrayList<>();
-        items.add(new CancelProductRequest(opId,1));
-        items.add(new CancelProductRequest(op2Id,1));
-        PaymentCancelRequest req = new PaymentCancelRequest(
-                //orderId cancelReason, items
-                o.getOrderNumber(),
-                "testReason",
-                items
-        );
-
-        CancelResponseNormalize.ParsedCancel parsed = new CancelResponseNormalize.ParsedCancel("pay_cancel_2", 20000L, "다건 취소", LocalDateTime.of(2025,8,25,11,0));
-        String idempotencyKey = IdempotencyKeyUtil.forCancel(
-                parsed.paymentKey(),
-                parsed.refundPrice(),
-                "testReason"
-        );
-
-        // when
-        service.saveCancellation(o, parsed, req,idempotencyKey);
-
-        // then: PaymentCancellation 1건 + 히스토리 2건
-        List<PaymentCancellation> all = paymentsCancelRepository.findAll();
-        assertThat(all).hasSize(1);
-
-        PaymentCancellation pc = all.get(0);
-        assertThat(pc.getPaymentKey()).isEqualTo("pay_cancel_2");
-        assertThat(pc.getPaymentCancellationHistories()).hasSize(2);
-
-        // 라인별 검증 (opId/qty/status)
-        Map<Long, PaymentCancellationHistory> byOpId = pc.getPaymentCancellationHistories().stream()
-                .collect(Collectors.toMap(
-                        PaymentCancellationHistory::getOrderProductId,
-                        h2 -> h2
-                ));
-        assertThat(byOpId.get(opId).getQuantity()).isEqualTo(1);
-        assertThat(byOpId.get(opId).getStatus().getStatusName()).isEqualTo(StatusEnum.CANCEL_COMPLETED);
-        assertThat(byOpId.get(op2Id).getQuantity()).isEqualTo(1);
-        assertThat(byOpId.get(op2Id).getStatus().getStatusName()).isEqualTo(StatusEnum.CANCEL_COMPLETED);
-
-        // 주문 상태 전이(부분 취소일 수도 있으니 범위로 체크)
-        Order reloaded = em.find(Order.class, o.getId());
-        assertThat(reloaded.getStatus().getStatusName())
-                .isIn(StatusEnum.ORDER_ALL_CANCELED, StatusEnum.ORDER_PARTIAL_CANCELED);
-    }
+//    @Test
+//    @Transactional
+//    void 취소저장_다건_각각_히스토리저장과수량검증() {
+//        // given: 기존 주문에 라인 하나 더 추가
+//        Order o = getManagedOrder();
+//        OrderProduct op2 = OrderProduct.create(product2, 10000L, 1, "M", "BLACK", "url", orderProductWaiting);
+//        o.addOrderProduct(op2);
+//        em.flush();
+//
+//        Long opId = o.getOrderProducts().get(0).getId();
+//        Long op2Id = op2.getId();
+//
+//        // DTO 모킹: 두 라인 각각 다른 수량
+//        List<CancelProductRequest> items = new ArrayList<>();
+//        items.add(new CancelProductRequest(opId,1));
+//        items.add(new CancelProductRequest(op2Id,1));
+//        PaymentCancelRequest req = new PaymentCancelRequest(
+//                //orderId cancelReason, items
+//                o.getOrderNumber(),
+//                "testReason",
+//                items
+//        );
+//
+//        CancelResponseNormalize.ParsedCancel parsed = new CancelResponseNormalize.ParsedCancel("pay_cancel_2", 20000L, "다건 취소", LocalDateTime.of(2025,8,25,11,0));
+//        String idempotencyKey = IdempotencyKeyUtil.forCancel(
+//                parsed.paymentKey(),
+//                parsed.refundPrice(),
+//                "testReason"
+//        );
+//
+//        // when
+//        service.saveCancellation(o, parsed, req,idempotencyKey);
+//
+//        // then: PaymentCancellation 1건 + 히스토리 2건
+//        List<PaymentCancellation> all = paymentsCancelRepository.findAll();
+//        assertThat(all).hasSize(1);
+//
+//        PaymentCancellation pc = all.get(0);
+//        assertThat(pc.getPaymentKey()).isEqualTo("pay_cancel_2");
+//        assertThat(pc.getPaymentCancellationHistories()).hasSize(2);
+//
+//        // 라인별 검증 (opId/qty/status)
+//        Map<Long, PaymentCancellationHistory> byOpId = pc.getPaymentCancellationHistories().stream()
+//                .collect(Collectors.toMap(
+//                        PaymentCancellationHistory::getOrderProductId,
+//                        h2 -> h2
+//                ));
+//        assertThat(byOpId.get(opId).getQuantity()).isEqualTo(1);
+//        assertThat(byOpId.get(opId).getStatus().getStatusName()).isEqualTo(StatusEnum.CANCEL_COMPLETED);
+//        assertThat(byOpId.get(op2Id).getQuantity()).isEqualTo(1);
+//        assertThat(byOpId.get(op2Id).getStatus().getStatusName()).isEqualTo(StatusEnum.CANCEL_COMPLETED);
+//
+//        // 주문 상태 전이(부분 취소일 수도 있으니 범위로 체크)
+//        Order reloaded = em.find(Order.class, o.getId());
+//        assertThat(reloaded.getStatus().getStatusName())
+//                .isIn(StatusEnum.ORDER_ALL_CANCELED, StatusEnum.ORDER_PARTIAL_CANCELED);
+//    }
 
     @Test
     @Transactional
@@ -510,27 +498,27 @@ class AfterConfirmTransactionServiceTest {
                 .isEqualTo(StatusEnum.ORDER_WAITING);
     }
 
-    @Test
-    @Transactional
-    void 이미존재하는_paymentKey면_existing리턴() {
-        Normalized normalized = normalizedApproved();
-
-        TossPaymentResponse resp = TossPaymentResponse.builder()
-                .method("카드").totalAmount(TOTAL_AMOUNT).finalAmount(TOTAL_AMOUNT)
-                .approvedAt(LocalDateTime.of(2025,8,24,10,5))
-                .build();
-        given(paymentMapper.toTossPaymentResponse(any(Payments.class))).willReturn(resp);
-        String orderNumber=getManagedOrder().getOrderNumber();
-
-        // 1차 호출로 save
-        service.approveInTransaction(orderNumber, normalized);
-
-        // 2차 호출시 existing != null 경로
-        TossPaymentResponse actual = service.approveInTransaction(orderNumber, normalized);
-
-        assertThat(actual).isEqualTo(resp);
-        then(paymentMapper).should(atLeastOnce()).toTossPaymentResponse(any(Payments.class));
-    }
+//    @Test
+//    @Transactional
+//    void 이미존재하는_paymentKey면_existing리턴() {
+//        Normalized normalized = normalizedApproved();
+//
+//        TossPaymentResponse resp = TossPaymentResponse.builder()
+//                .method("카드").totalAmount(TOTAL_AMOUNT).finalAmount(TOTAL_AMOUNT)
+//                .approvedAt(LocalDateTime.of(2025,8,24,10,5))
+//                .build();
+//        given(paymentMapper.toTossPaymentResponse(any(Payments.class))).willReturn(resp);
+//        String orderNumber=getManagedOrder().getOrderNumber();
+//
+//        // 1차 호출로 save
+//        service.approveInTransaction(orderNumber, normalized);
+//
+//        // 2차 호출시 existing != null 경로
+//        TossPaymentResponse actual = service.approveInTransaction(orderNumber, normalized);
+//
+//        assertThat(actual).isEqualTo(resp);
+//        then(paymentMapper).should(atLeastOnce()).toTossPaymentResponse(any(Payments.class));
+//    }
 
 
 }

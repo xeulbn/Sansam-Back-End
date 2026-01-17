@@ -2,20 +2,16 @@ package org.example.sansam.order.batch;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.sansam.order.compensation.domain.StockRestoreOutBox;
 import org.example.sansam.order.compensation.service.StockRestoreOutBoxService;
 import org.example.sansam.order.compensation.worker.OrderExpiryProcessor;
-import org.example.sansam.order.domain.Order;
-import org.example.sansam.order.domain.OrderProduct;
 import org.example.sansam.order.repository.OrderRepository;
 import org.example.sansam.product.service.ProductService;
 import org.example.sansam.status.domain.Status;
 import org.example.sansam.status.domain.StatusEnum;
 import org.example.sansam.status.repository.StatusRepository;
-import org.example.sansam.stock.Service.StockService;
+import org.example.sansam.status.service.StatusCachingService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,11 +26,12 @@ public class OrderCleanUpScheduler {
     private final OrderExpiryProcessor orderExpiryProcessor;
     private final StockRestoreOutBoxService stockOutBoxService;
     private final ProductService productService;
+    private final StatusCachingService statusCachingService;
 
     @Scheduled(cron = "0 * * * * *")
     public void cleanUpExpiredOrders() {
-        Status orderWaiting = statusRepository.findByStatusName(StatusEnum.ORDER_WAITING);
-        Status orderExpired = statusRepository.findByStatusName(StatusEnum.ORDER_EXPIRED);
+        Status orderWaiting = statusCachingService.get(StatusEnum.ORDER_WAITING);
+        Status orderExpired = statusCachingService.get(StatusEnum.ORDER_EXPIRED);
         LocalDateTime expiredtime = LocalDateTime.now().minusMinutes(10);
 
 

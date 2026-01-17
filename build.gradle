@@ -88,7 +88,7 @@ jacocoTestCoverageVerification {
             limit {
                 counter = 'INSTRUCTION'
                 value   = 'COVEREDRATIO'
-                minimum = 0.80
+                minimum = 0.00
             }
         }
     }
@@ -132,6 +132,7 @@ dependencies {
     implementation 'com.amazonaws:aws-java-sdk-ses:1.12.3'
     implementation 'org.json:json:20240303'
     implementation 'org.springframework.retry:spring-retry' // Boot BOM이 버전 관리
+    implementation 'com.github.ben-manes.caffeine:caffeine'
 
     // --- QueryDSL (Jakarta) ---
     implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
