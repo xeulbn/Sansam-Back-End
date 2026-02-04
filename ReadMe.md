@@ -112,7 +112,6 @@ src/main/java/org/example/sansam
 ## 🧪 Test ##
 ./gradlew test
 
---
 
 ## 🎯 Design Focus ##
 1. 동시성 환경에서의 재고 정합성
