@@ -1,94 +1,128 @@
-# 🕒 SanSam's Ecumus Platform
+#👜 SanSam Backend#
 
-이 프로젝트는 **명품 판매 이커머스 플랫폼**입니다.  
-사용자는 명품들만 모여있는 쇼핑몰을 온라인으로 경험할 수 있습니다.
-초고가 상품으로 명품들로만 모여있는 쇼핑몰을 경험시켜 드립니다.
-일반적인 상품 구입, 리뷰 작성, 위시리스트 등록, 실시간 채팅 등 
-다양한 커머스 기능을 제공합니다.
+SanSam은 명품 이커머스 플랫폼을 가정한 백엔드 서비스입니다.
+이 저장소는 실제 트래픽·동시성·장애 상황을 고려한 주문–결제–재고 시스템 설계를 목표로 구현되었습니다.
 
----
-## 팀소개
-<img width="669" height="319" alt="image" src="https://github.com/user-attachments/assets/d7cd5382-a968-4be7-b7a8-7c32c5284e38" />
+📌 본 문서는 Git 작성자 기준으로, 제가 직접 설계·구현한 모듈만을 중심으로 정리되어 있습니다.
 
----
-## Infra
-<img width="723" height="427" alt="image" src="https://github.com/user-attachments/assets/70c18b4f-ee3a-43bc-a47b-175a7f2a5cc1" />
+##✍️ Author & Scope##
+Git Author: xeulbn (gsbtiger0215@gmail.com)
 
----
-## ERD
-<img width="4320" height="2382" alt="HotDealPlatform (7)" src="https://github.com/user-attachments/assets/408df384-e3d3-401a-8013-834373535544" />
+##담당 영역##
+- 주문 (Order)
+- 결제 (Payment)
+- 재고 (Stock)
+- 상태 (Status)
 
----
-## 🚀 주요 기능
+##🛠 Tech Stack##
+###Language / Framework###
+- Java 21
+- Spring Boot 3.5.x
+- Persistence
+- Spring Data JPA
+- QueryDSL
+- MySQL
+- Infra / Middleware
+- Redis
+- Spring Batch
+- Spring Scheduler
 
-### ✅ 사용자 (User)
-- 회원가입
-- 마이페이지 정보 수정 및 탈퇴
-- 세션 기반 로그인
+###Test###
+JUnit 5
+Jacoco Test Coverage Report
+--
+## 📦 Implemented Modules ##
+🧾 주문 (Order)
+- 주문 생성 트랜잭션 구성
+- 주문번호 생성 정책 (OrderNumberPolicy)
+- 가격 계산 정책 분리 (PricingPolicy)
+- 주문 / 주문상품 상태 전이 관리
+- 주문 만료 처리 및 재고 복구 보상 트랜잭션 (Outbox 패턴) 설계
 
----
-## 은경
+## 💳 결제 (Payment) ##
+- Toss Payments 결제 승인 흐름 구현
+- 외부 결제 응답 정규화 (Normalize Layer)
+- 결제 승인 멱등성 보장
+- 결제 실패 시 Best-effort 취소 → 실패 시 Outbox 큐잉
+- 부분 취소 / 전체 취소 상태 전이 및 이력 관리
 
-### ✅ 상품 (Product)
-- 상품 등록/조회/삭제 (관리자)
-- 검색, 정렬, 카테고리 조회
-- 위시리스트 등록/해제
+## 📦 재고 (Stock) ##
+- Redis 기반 재고 선점(Reserve) 구조
+- Lua Script 기반 원자적 재고 차감
+- 재고 부족 사전 검증
+- Redis 분산락 유틸리티 구현
+- 일일 사용량 집계 → RDB 동기화 스케줄러
+- Redis / DB 메트릭 수집 구조
 
-### ✅ 장바구니 (Cart)
-- 상품 담기 / 삭제 / 목록 조회
+## 🔁 상태 (Status) ##
+- 상태 코드 캐싱 서비스 (@Cacheable)
+- 상태 변경 시 캐시 갱신 로직 분리
+- 주문 / 결제 / 재고 상태 전이 공통 관리
+--
+## 🔄 Core Flow ##
+### 1️⃣ 주문 생성 ###
+AfterConfirmOrderService.placeOrderTransaction
+- Redis 재고 선점
+- 주문 / 주문상품 생성
+- 주문번호 정책 적용
+- 가격 정책 적용
+- 단일 트랜잭션 내 처리
 
-### ✅ 리뷰 (Review)
-- 구매 상품에 대한 리뷰 작성/수정/삭제
-- 상품 상세 페이지에서 리뷰 전체 조회
+### 2️⃣ 결제 승인 ###
+PaymentService.confirmPayment
+- 주문 및 금액 검증
+- Toss 결제 승인 요청
+- 응답 정규화
+- AfterConfirmTransactionService.approveInTransaction 호출
+- DB 실패 시 Best-effort 결제 취소
+- 취소 실패 시 Outbox 큐잉 → 비동기 보상 처리
 
----
-## 슬빈
+### 3️⃣ 주문 만료 & 재고 복구 ###
+OrderCleanUpScheduler
+- 만료 주문 탐색
+- OrderExpiryProcessor
+- 주문 상태 만료 처리
+- 재고 복구 Outbox enqueue
+- StockRestoreWorker / Processor
+- 재고 복구 비동기 처리
 
-## 아키텍처 구성도 (Kafka Streams 도입 이후)
-<img width="3258" height="3840" alt="kafkaStreams도입이후_아키텍처" src="https://github.com/user-attachments/assets/b482e91a-b83f-4ef1-a3a5-cf322177a367" />
+### 4️⃣ 재고 동기화 ###
+RedisStockService.reserve
+- Lua Script 기반 원자적 재고 선점
+- StockSyncScheduler
+- Redis 일일 사용량 집계
+- RDB 동기화
 
-### ✅ 주문 및 결제 (Order / Payment)
-- 주문서 저장 / 삭제
-- 토스 API 연동 결제/결제 취소
-- 보상 로직
+--
+## 🗂 Project Structure ##
 
-### ✅ 재고 (Stock)
-- 재고 차감
-- 재고 증가
-- 보상 로직
+src/main/java/org/example/sansam
+ ├─ order      # 주문 도메인
+ ├─ payment    # 결제 도메인
+ ├─ stock      # 재고 도메인
+ └─ status     # 상태/코드 관리
+--
 
-### ✅ 상태 (Status)
-- DB에서 이미 저장되어있는 상태 찾기
-- 상태값 캐싱
+🚀 Run
+./gradlew bootRun
 
-### 프로젝트 여정기
+🧪 Test
+./gradlew test
 
-[👨🏻‍💻 1. 재고 ERD 분리 과정](https://github.com/SanSam2/Back-End/wiki/%EC%9E%AC%EA%B3%A0-ERD-%EB%B6%84%EB%A6%AC-%EA%B3%BC%EC%A0%95)
+--
 
-[👨🏻‍💻 2. 테스트코드 작성과 보상 OutBox 구현기](https://github.com/SanSam2/Back-End/wiki/Jacoco-%ED%85%8C%EC%8A%A4%ED%8A%B8%EC%BB%A4%EB%B2%84%EB%A6%AC%EC%A7%80-100%25-%EB%8B%AC%EC%84%B1%EA%B8%B0-%28feat.-DLQ%EB%A5%BC-RDB%EB%A1%9C-%EA%B5%AC%ED%98%84%ED%95%B4%EB%82%B4%EA%B8%B0%29)
+## 테스트 예시 경로 ##
+주문 테스트
+src/test/java/org/example/sansam/order/
+결제 테스트
+src/test/java/org/example/sansam/payment/
 
-[👨🏻‍💻 3. Order 트랜잭션 분리 & DB Indexing을 통한 최적화](https://github.com/SanSam2/Back-End/wiki/Order-%ED%8A%B8%EB%9E%9C%EC%9E%AD%EC%85%98-%EB%B6%84%EB%A6%AC-%26-DB-Indexing%EC%9D%84-%ED%86%B5%ED%95%9C-%EC%B5%9C%EC%A0%81%ED%99%94)
+--
 
-[👨🏻‍💻 4. HikariCP 튜닝 및 테스트 툴 변경](https://github.com/SanSam2/Back-End/wiki/HikariCP-%ED%8A%9C%EB%8B%9D-%EB%B0%8F-%ED%85%8C%EC%8A%A4%ED%8A%B8-%ED%88%B4-%EB%B3%80%EA%B2%BD)
-
-[👨🏻‍💻 5. 상태값 캐싱 & 재고 이벤트 비동기 처리(단일 서버)](https://github.com/SanSam2/Back-End/wiki/%EC%83%81%ED%83%9C%EA%B0%92-%EC%BA%90%EC%8B%B1-%26-%EC%9E%AC%EA%B3%A0-%EC%9D%B4%EB%B2%A4%ED%8A%B8-%EB%B9%84%EB%8F%99%EA%B8%B0-%EC%B2%98%EB%A6%AC%28%EB%8B%A8%EC%9D%BC-%EC%84%9C%EB%B2%84%29)
-
-[👨🏻‍💻 6. 재고 서버 분리 with RabbitMQ](https://github.com/SanSam2/Back-End/wiki/Stock-%EC%84%9C%EB%B2%84-%EB%B6%84%EB%A6%AC-%EC%97%AC%EC%A0%95%EA%B8%B0-%28SanSam-%EC%A3%BC%EB%AC%B8---%EA%B2%B0%EC%A0%9C---%EC%83%81%ED%83%9C-MSA-%EC%97%AC%EC%A0%95%EA%B8%B0%29--%281%29)
-
-[👨🏻‍💻 7. 재고 서버 분리 with Kafka & KafkaStreams](https://github.com/SanSam2/Back-End/wiki/Kafka%EB%A1%9C-%EB%A9%94%EC%8B%9C%EC%A7%80-%ED%81%90-%EB%B3%80%EA%B2%BD-%EA%B7%B8%EB%A6%AC%EA%B3%A0-KafkaStreams%EC%9D%98-%EB%8F%84%EC%9E%85)
-
-
----
-## 호상
-
-### ✅ 알림 시스템 (Notification)
-- 결제 완료/취소 이메일 및 홈페이지 알림
-- 리뷰 요청 / 재고 부족 알림
-
----
-## 한섭
-
-### ✅ 채팅 (Chat)
-- 조건 기반 오픈 채팅방 생성/입장/퇴장
-- 실시간 메시지 전송 및 수신
-- 채팅 읽음 처리 및 배지 알림
+## 🎯 Design Focus ##
+1. 동시성 환경에서의 재고 정합성
+2. 외부 결제 실패를 고려한 보상 트랜잭션
+3. 트랜잭션 경계 명확화
+4. Outbox 패턴 기반 비동기 복구
+5. 상태 전이의 명시적 모델링
+6. “성공 흐름보다 실패 흐름”을 먼저 설계
