@@ -98,10 +98,10 @@ RedisStockService.reserve
 ## 🗂 Project Structure ##
 
 src/main/java/org/example/sansam
- ├─ order      # 주문 도메인
- ├─ payment    # 결제 도메인
- ├─ stock      # 재고 도메인
- └─ status     # 상태/코드 관리
+-> order      # 주문 도메인
+-> payment    # 결제 도메인
+-> stock      # 재고 도메인
+-> status     # 상태/코드 관리
  
 --
 
