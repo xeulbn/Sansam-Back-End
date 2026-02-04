@@ -105,13 +105,11 @@ src/main/java/org/example/sansam
 -> status     # 상태/코드 관리
  
 --
-
 🚀 Run
 ./gradlew bootRun
 
 🧪 Test
 ./gradlew test
-
 --
 
 ## 테스트 예시 경로 ##
