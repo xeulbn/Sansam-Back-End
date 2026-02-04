@@ -1,20 +1,20 @@
-#👜 SanSam Backend#
+# 👜 SanSam Backend #
 
 SanSam은 명품 이커머스 플랫폼을 가정한 백엔드 서비스입니다.
 이 저장소는 실제 트래픽·동시성·장애 상황을 고려한 주문–결제–재고 시스템 설계를 목표로 구현되었습니다.
 
 📌 본 문서는 Git 작성자 기준으로, 제가 직접 설계·구현한 모듈만을 중심으로 정리되어 있습니다.
 
-##✍️ Author & Scope##
+## ✍️ Author & Scope ##
 Git Author: xeulbn (gsbtiger0215@gmail.com)
 
-##담당 영역##
+## 담당 영역 ##
 - 주문 (Order)
 - 결제 (Payment)
 - 재고 (Stock)
 - 상태 (Status)
 
-##🛠 Tech Stack##
+## 🛠 Tech Stack ##
 ###Language / Framework###
 - Java 21
 - Spring Boot 3.5.x
@@ -60,6 +60,7 @@ Jacoco Test Coverage Report
 - 주문 / 결제 / 재고 상태 전이 공통 관리
 --
 ## 🔄 Core Flow ##
+
 ### 1️⃣ 주문 생성 ###
 AfterConfirmOrderService.placeOrderTransaction
 - Redis 재고 선점
@@ -101,6 +102,7 @@ src/main/java/org/example/sansam
  ├─ payment    # 결제 도메인
  ├─ stock      # 재고 도메인
  └─ status     # 상태/코드 관리
+ 
 --
 
 🚀 Run
