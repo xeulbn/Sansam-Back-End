@@ -15,7 +15,7 @@ Git Author: xeulbn (gsbtiger0215@gmail.com)
 - 상태 (Status)
 
 ## 🛠 Tech Stack ##
-###Language / Framework###
+### Language / Framework ###
 - Java 21
 - Spring Boot 3.5.x
 - Persistence
