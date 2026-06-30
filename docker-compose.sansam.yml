@@ -17,12 +17,12 @@ services:
     # 스프링 프로파일
     environment:
       SPRING_PROFILES_ACTIVE: local,perf
-      OTEL_SERVICE_NAME: SanSam
-      OTEL_TRACES_EXPORTER: otlp
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://host.docker.internal:4318
-      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      #OTEL_SERVICE_NAME: SanSam
+      #OTEL_TRACES_EXPORTER: otlp
+      #OTEL_EXPORTER_OTLP_ENDPOINT: http://host.docker.internal:4318
+      #OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
       # Jaeger가 다른 네트워크에 있다면 아래 OTEL_* 만 이곳에서 덮어써도 됨
-      OTEL_TRACES_SAMPLER: always_on
+      #OTEL_TRACES_SAMPLER: always_on
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
 
