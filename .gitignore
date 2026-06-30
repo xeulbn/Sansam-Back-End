@@ -210,3 +210,4 @@ gradle-app.setting
 **/._.DS_Store
 
 .env.sansam.local
+bin/
