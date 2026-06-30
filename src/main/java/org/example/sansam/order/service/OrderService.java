@@ -46,6 +46,7 @@ public class OrderService {
 
 
     public OrderResponse saveOrder(OrderRequest request){
+        log.error("thread={}, virtual={}", Thread.currentThread(), Thread.currentThread().isVirtual());
         //상품 정규화 -> 예를 들어서 그럴 일은 없으나, 상품 정보가 막 겹쳐서 들어오면?
         List<OrderItemDto> items = normalize(request.getItems());
         if (items.isEmpty())
@@ -58,8 +59,12 @@ public class OrderService {
         Map<Long, String> productImageUrl = new HashMap<>();
 
         LocalDateTime start2 = LocalDateTime.now();
-        for (Product p : pre.productMap().values()) {
-            productImageUrl.put(p.getId(), fileService.getImageUrl(p.getFileManagement().getId()));
+        Map<Long, Long> productFileManagementIds = pre.productMap().values().stream()
+                .filter(p -> p.getFileManagement() != null)
+                .collect(Collectors.toMap(Product::getId, p -> p.getFileManagement().getId()));
+        Map<Long, String> imageUrlsByFileManagementId = fileService.getImageUrls(productFileManagementIds.values());
+        for (Map.Entry<Long, Long> entry : productFileManagementIds.entrySet()) {
+            productImageUrl.put(entry.getKey(), imageUrlsByFileManagementId.get(entry.getValue()));
         }
         LocalDateTime end2 = LocalDateTime.now();
         log.error(" getImageUrl time : {} ", end2.toInstant(java.time.ZoneOffset.UTC).toEpochMilli() - start2.toInstant(java.time.ZoneOffset.UTC).toEpochMilli());

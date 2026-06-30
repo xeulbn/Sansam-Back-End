@@ -1,6 +1,7 @@
 package org.example.sansam.order.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.sansam.order.domain.Order;
 import org.example.sansam.order.domain.OrderProduct;
 import org.example.sansam.order.domain.nameformatter.KoreanOrdernameFormatter;
@@ -11,18 +12,16 @@ import org.example.sansam.order.dto.OrderResponse;
 import org.example.sansam.order.mapper.OrderResponseMapper;
 import org.example.sansam.order.repository.OrderRepository;
 import org.example.sansam.product.domain.Product;
-import org.example.sansam.product.repository.ProductJpaRepository;
 import org.example.sansam.product.service.ProductService;
-import org.example.sansam.s3.service.FileService;
-import org.example.sansam.status.repository.StatusRepository;
-import org.example.sansam.stock.Service.StockService;
+import org.example.sansam.stock.service.StockService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AfterConfirmOrderService {
@@ -46,6 +45,8 @@ public class AfterConfirmOrderService {
             );
             stockService.decreaseStock(detailId, it.getQuantity());
         }
+        log.error("thread={}, virtual={}", Thread.currentThread(), Thread.currentThread().isVirtual());
+
 
         // 주문/주문상품 생성
         Order order = Order.create(pre.user(), pre.waiting(), orderNumberPolicy, LocalDateTime.now());
@@ -59,7 +60,7 @@ public class AfterConfirmOrderService {
             );
             order.addOrderProduct(op);
         }
-
+        log.error("thread={}, virtual={}", Thread.currentThread(), Thread.currentThread().isVirtual());
         order.addOrderName(KoreanOrdernameFormatter.INSTANCE);
         order.calcTotal(pricingPolicy);
         orderRepository.save(order);

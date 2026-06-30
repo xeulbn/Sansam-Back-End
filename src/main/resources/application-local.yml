@@ -12,7 +12,7 @@ server:
       cookie:
         name: JSESSIONID        # 쿠키 이름
         http-only: true         # JS에서 접근 불가
-        secure: false           # https에서만 필요 시 true
+        secure: false           # hㅍttps에서만 필요 시 true
         same-site: none
 
 logging:
@@ -22,6 +22,9 @@ logging:
     org.hibernate.SQL: WARN
 
 spring:
+  threads:
+    virtual:
+      enabled: true
   thymeleaf:
     encoding: UTF-8
   application:
@@ -72,7 +75,6 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-#    show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
@@ -115,7 +117,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: prometheus, health, info
+        include: prometheus, health, info, threaddump
   metrics:
     tags:
       application: ${spring.application.name}
@@ -123,6 +125,8 @@ management:
     health:
       probes:
         enabled: true
+  tracing:
+    enabled: false
 
 cloud:
   aws:

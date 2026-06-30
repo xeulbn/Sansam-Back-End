@@ -11,7 +11,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -59,6 +62,23 @@ public class FileService {
                 .findFirst()
                 .orElse(fileDetails.get(0))
                 .getUrl();
+    }
+
+    public Map<Long, String> getImageUrls(Collection<Long> fileManagementIds) {
+        if (fileManagementIds == null || fileManagementIds.isEmpty()) {
+            return Map.of();
+        }
+
+        List<FileDetail> fileDetails = fileDetailJpaRepository.findAllByFileManagementIdIn(
+                fileManagementIds.stream().distinct().toList()
+        );
+
+        Map<Long, String> imageUrls = new LinkedHashMap<>();
+        for (FileDetail fileDetail : fileDetails) {
+            Long fileManagementId = fileDetail.getFileManagement().getId();
+            imageUrls.putIfAbsent(fileManagementId, fileDetail.getUrl());
+        }
+        return imageUrls;
     }
 
     public Long getFileDetail(FileManagement fileManagement) {

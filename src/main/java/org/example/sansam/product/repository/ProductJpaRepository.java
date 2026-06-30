@@ -15,6 +15,14 @@ import java.util.List;
 
 @Repository
 public interface ProductJpaRepository extends JpaRepository<Product, Long> {
+    @Query("""
+    select distinct p
+    from Product p
+    left join fetch p.fileManagement fm
+    where p.id in :ids
+""")
+    List<Product> findAllByIdInWithFileManagement(@Param("ids") List<Long> ids);
+
     @Query("SELECT COUNT(r) FROM Review r WHERE r.product.id = :productId")
     Long countReviewsByProductId(@Param("productId") Long productId);
 

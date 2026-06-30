@@ -1,4 +1,4 @@
-package org.example.sansam.stock.Service;
+package org.example.sansam.stock.service;
 
 
 import lombok.RequiredArgsConstructor;

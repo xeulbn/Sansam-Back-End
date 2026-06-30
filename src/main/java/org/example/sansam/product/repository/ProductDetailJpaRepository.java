@@ -46,6 +46,31 @@ public interface ProductDetailJpaRepository extends JpaRepository<ProductDetail,
             @Param("color") String color
     );
 
+    @Query("""
+        select pd.id
+          from ProductDetail pd
+         where pd.product.id = :productId
+           and exists (
+               select 1 from ProductConnect pc
+               join pc.option o
+               where pc.productDetail = pd
+                 and o.type = :sizeType and o.name = :size
+           )
+           and exists (
+               select 1 from ProductConnect pc2
+               join pc2.option o2
+               where pc2.productDetail = pd
+                 and o2.type = :colorType and o2.name = :color
+           )
+    """)
+    Optional<Long> findDetailIdByProductAndSizeColor(
+            @Param("productId") Long productId,
+            @Param("sizeType") String sizeType,
+            @Param("size") String size,
+            @Param("colorType") String colorType,
+            @Param("color") String color
+    );
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
         update ProductDetail pd

@@ -21,6 +21,9 @@ logging:
     org.hibernate.SQL: WARN
 
 spring:
+  threads:
+    virtual:
+      enabled: true
   thymeleaf:
     encoding: UTF-8
   application:
@@ -95,7 +98,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: prometheus, health, info
+        include: prometheus, health, info, threaddump
   metrics:
     tags:
       application: ${spring.application.name}
@@ -103,6 +106,9 @@ management:
     health:
       probes:
         enabled: true
+
+  tracing:
+    enabled: false
 
 cloud:
   aws:

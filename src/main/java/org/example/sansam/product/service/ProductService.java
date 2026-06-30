@@ -308,14 +308,14 @@ public class ProductService {
     }
 
     public Long getDetailId(String color, String size, Long productId) {
-        List<ProductDetail> details = productDetailJpaRepository.findByProduct(productJpaRepository.findById(productId)
-                .orElseThrow(() -> new EntityNotFoundException("상품이 없습니다.")));
-        for (ProductDetail detail : details) {
-            if (matchProductDetail(detail, canon(color), canon(size))) {
-                return detail.getId();
-            }
-        }
-        throw new IllegalArgumentException("존재하지 않는 옵션입니다.");
+        return productDetailJpaRepository.findDetailIdByProductAndSizeColor(
+                        productId,
+                        "size",
+                        canon(size),
+                        "color",
+                        canon(color)
+                )
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 옵션입니다."));
     }
 
     private String canon(String s) {

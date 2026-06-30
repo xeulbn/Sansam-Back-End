@@ -35,7 +35,7 @@ public class ReadOnlyOrderService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NO_USER_ERROR));
 
-        Map<Long, Product> productMap = productJpaRepository.findAllById(
+        Map<Long, Product> productMap = productJpaRepository.findAllByIdInWithFileManagement(
                 items.stream().map(OrderItemDto::getProductId).toList()
         ).stream().collect(Collectors.toMap(Product::getId, p -> p));
 

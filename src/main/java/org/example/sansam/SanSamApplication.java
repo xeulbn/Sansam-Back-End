@@ -12,6 +12,7 @@ public class SanSamApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(SanSamApplication.class, args);
+        
     }
 
 }
