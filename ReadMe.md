@@ -54,8 +54,6 @@ Vercel Client
 
 ## ERD 설계
 
-![SanSam ERD](docs/images/sansam-erd.png)
-
 - ERD Cloud: [바로가기](https://www.erdcloud.com/d/p3bK5o7T4si4gLpAt)
 
 주문, 결제, 재고 흐름의 변경 빈도와 트랜잭션 경계를 기준으로 테이블을 분리했습니다. 상품 조회 데이터는 상품/상세/옵션/재고로 나누고, 주문 이후에는 주문 당시의 상품명, 옵션, 가격, 대표 이미지 URL을 `order_product`에 저장해 상품 정보가 변경되어도 주문 이력이 유지되도록 설계했습니다.
