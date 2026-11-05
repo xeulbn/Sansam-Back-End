@@ -107,7 +107,7 @@ public class RedisStockService {
 
                 if(value !=null){
                     Long detailId = Long.parseLong(key.split(":")[2]);
-                    result.put(detailId, getOrLoadTotalStock(detailId));
+                    result.put(detailId, Integer.parseInt(value));
                 }
             }
         }
