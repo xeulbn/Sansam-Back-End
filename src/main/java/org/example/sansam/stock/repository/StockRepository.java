@@ -1,13 +1,14 @@
 package org.example.sansam.stock.repository;
 
+import jakarta.persistence.LockModeType;
 import org.example.sansam.stock.domain.Stock;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 
@@ -32,4 +33,8 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
          WHERE s.productDetailsId = :detailId
         """)
     int increase(@Param("detailId") Long detailId, @Param("qty") int qty);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select s from Stock s where s.productDetailsId = :detailId")
+    Optional<Stock> findForUsageSync(@Param("detailId") long detailId);
 }

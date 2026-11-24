@@ -2,6 +2,8 @@ package org.example.sansam.order.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.sansam.exception.pay.CustomException;
+import org.example.sansam.exception.pay.ErrorCode;
 import org.example.sansam.order.domain.Order;
 import org.example.sansam.order.domain.OrderProduct;
 import org.example.sansam.order.domain.nameformatter.KoreanOrdernameFormatter;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -38,13 +41,6 @@ public class AfterConfirmOrderService {
     public OrderResponse placeOrderTransaction(Preloaded pre,
                                                   List<OrderItemDto> items,
                                                   Map<Long, String> productImageUrl) {
-        // 재고 차감시키기
-        for (OrderItemDto it : items) {
-            Long detailId = productService.getDetailId(
-                    it.getProductColor(), it.getProductSize(), it.getProductId()
-            );
-            stockService.decreaseStock(detailId, it.getQuantity());
-        }
         log.error("thread={}, virtual={}", Thread.currentThread(), Thread.currentThread().isVirtual());
 
 
@@ -63,6 +59,21 @@ public class AfterConfirmOrderService {
         log.error("thread={}, virtual={}", Thread.currentThread(), Thread.currentThread().isVirtual());
         order.addOrderName(KoreanOrdernameFormatter.INSTANCE);
         order.calcTotal(pricingPolicy);
+        // 재고 차감시키기
+        Map<Long, Integer> quantitiesByDetailId = new LinkedHashMap<>();
+        for (OrderItemDto item : items) {
+            Long detailId = productService.getDetailId(
+                    item.getProductColor(), item.getProductSize(), item.getProductId()
+            );
+
+            int quantity = item.getQuantity();
+            int previous = quantitiesByDetailId.getOrDefault(detailId, 0);
+            if (quantity <= 0 || quantity > Integer.MAX_VALUE - previous) {
+                throw new CustomException(ErrorCode.INVALID_STOCK_QUANTITY);
+            }
+            quantitiesByDetailId.put(detailId, previous + quantity);
+        }
+        stockService.reserveAll(quantitiesByDetailId);
         orderRepository.save(order);
         return orderResponseMapper.toDto(order);
     }
