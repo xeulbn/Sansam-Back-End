@@ -73,7 +73,6 @@ public class AfterConfirmTransactionService {
 
     @Transactional
     public CancelResponse saveCancellation (Order cancelOrder, CancelResponseNormalize.ParsedCancel parsed, PaymentCancelRequest request, String idempotencyKey){
-        //TODO: 상태값이 주기적으로 변화하지않는 값이라면 DB 부하를 줄여보자.(ex. 캐싱)
         Status orderAllCanceled = statusCachingService.get(StatusEnum.ORDER_ALL_CANCELED);
         Status orderPartialCanceled = statusCachingService.get(StatusEnum.ORDER_PARTIAL_CANCELED);
         Status cancelCompleted = statusCachingService.get(StatusEnum.CANCEL_COMPLETED);
@@ -101,7 +100,7 @@ public class AfterConfirmTransactionService {
             OrderProduct op = Optional.ofNullable(opById.get(item.getOrderProductId()))
                     .orElseThrow(() -> new CustomException(ErrorCode.ORDER_PRODUCT_NOT_BELONGS_TO_ORDER));
 
-            op.cancelQuantityCheckChange(item.getCancelQuantity(), orderProductCanceled, orderProductPartiallyCanceled );
+            op.cancel(item.getCancelQuantity(), orderProductCanceled, orderProductPartiallyCanceled);
         }
         paymentsCancelRepository.save(pc);
 
