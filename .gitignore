@@ -211,4 +211,4 @@ gradle-app.setting
 
 .env.sansam.local
 bin/
-experiment/**
+/experiment
